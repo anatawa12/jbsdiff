@@ -32,9 +32,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.apache.commons.compress.compressors.CompressorException;
-import org.apache.commons.compress.compressors.CompressorStreamFactory;
-
 /**
  * This class provides functionality for generating bsdiff patches from two
  * source files (an old and new file).  Using the differences between the old
@@ -49,27 +46,6 @@ public class Diff {
 
     /**
      * Using two different versions of a file, generate a bsdiff patch that can
-     * be applied to the old file to create the new file.  Uses the default
-     * bzip2 compression algorithm.
-     *
-     * @param oldBytes    The original ('old') state of the file/binary.
-     * @param newBytes    New state of the file/binary that will be compared
-     *                        to create a patch file
-     * @param out         An {@link OutputStream} to write the patch file to
-     *
-     * @throws CompressorException when a compression error occurs.
-     * @throws InvalidHeaderException when the bsdiff header is malformed or not
-     *     present.
-     * @throws IOException when an error occurs writing the bsdiff control
-     *     blocks.
-     */
-    public static void diff(byte[] oldBytes, byte[] newBytes, OutputStream out)
-            throws CompressorException, InvalidHeaderException, IOException {
-        diff(oldBytes, newBytes, out, new DefaultDiffSettings());
-    }
-
-    /**
-     * Using two different versions of a file, generate a bsdiff patch that can
      * be applied to the old file to create the new file.
      *
      * @param oldBytes    The original ('old') state of the file/binary.
@@ -80,23 +56,20 @@ public class Diff {
      *                        the compression and suffix sort algorithms to
      *                        create the patch with.
      *
-     * @throws CompressorException when a compression error occurs.
      * @throws InvalidHeaderException when the bsdiff header is malformed or not
      *     present.
      * @throws IOException when an error occurs writing the bsdiff control
      *     blocks.
      */
-    public static void diff(byte[] oldBytes, byte[] newBytes, OutputStream out,
-                            DiffSettings settings)
-            throws CompressorException, InvalidHeaderException, IOException {
-        CompressorStreamFactory compressor = new CompressorStreamFactory();
-        String compression = settings.getCompression();
+    public static <X extends Throwable> void diff(byte[] oldBytes, byte[] newBytes, OutputStream out,
+                            DiffSettings<X> settings)
+            throws X, InvalidHeaderException, IOException {
+        Compression<X> compression = settings.getCompression();
 
         int[] I = settings.sort(oldBytes);
 
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-        OutputStream patchOut =
-                compressor.createCompressorOutputStream(compression, byteOut);
+        OutputStream patchOut = compression.apply(byteOut);
 
         SearchResult result = null;
         int scan = 0, len = 0, position = 0;
@@ -223,14 +196,12 @@ public class Diff {
         Header header = new Header();
         header.setControlLength(byteOut.size());
 
-        patchOut =
-                compressor.createCompressorOutputStream(compression, byteOut);
+        patchOut = compression.apply(byteOut);
         patchOut.write(db);
         patchOut.close();
         header.setDiffLength(byteOut.size() - header.getControlLength());
 
-        patchOut =
-                compressor.createCompressorOutputStream(compression, byteOut);
+        patchOut = compression.apply(byteOut);
         patchOut.write(eb);
         patchOut.close();
 

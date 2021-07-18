@@ -27,28 +27,22 @@ package io.sigpipe.jbsdiff;
 
 import io.sigpipe.jbsdiff.sort.SuffixSort;
 
-import org.apache.commons.compress.compressors.CompressorStreamFactory;
-
 /**
  * Provides a default set of DiffSettings that produces patches that are
  * compatible with the bsdiff reference implementation.
  *
  * @author malensek
  */
-public class DefaultDiffSettings implements DiffSettings {
+public class DefaultDiffSettings<X extends Throwable> implements DiffSettings<X> {
 
-    private String compression;
+    private Compression<X> compression;
 
-    public DefaultDiffSettings() {
-        compression = CompressorStreamFactory.BZIP2;
-    }
-
-    public DefaultDiffSettings(String compression) {
+    public DefaultDiffSettings(Compression<X> compression) {
         this.compression = compression;
     }
 
     @Override
-    public String getCompression() {
+    public Compression<X> getCompression() {
         return compression;
     }
 

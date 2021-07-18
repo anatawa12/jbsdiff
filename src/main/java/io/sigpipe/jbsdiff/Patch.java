@@ -25,9 +25,6 @@ software, even if advised of the possibility of such damage.
 
 package io.sigpipe.jbsdiff;
 
-import org.apache.commons.compress.compressors.CompressorException;
-import org.apache.commons.compress.compressors.CompressorStreamFactory;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
@@ -55,14 +52,16 @@ public class Patch {
      * @param old    the original ('old') state of the binary
      * @param patch  a binary patch file to apply to the old state
      * @param out    an {@link OutputStream} to write the patched binary to
+     * @param decompression the factory to decompress patch data
      *
-     * @throws CompressorException when a compression error occurs.
+     * @throws X when the decompression factory fails to decompress patch data
      * @throws InvalidHeaderException when the bsdiff header is malformed or not
      *     present.
      * @throws IOException when an I/O error occurs
      */
-    public static void patch(byte[] old, byte[] patch, OutputStream out)
-            throws CompressorException, InvalidHeaderException, IOException {
+    public static <X extends Throwable> 
+    void patch(byte[] old, byte[] patch, OutputStream out, Decompression<X> decompression)
+            throws X, InvalidHeaderException, IOException {
         /* Read bsdiff header */
         InputStream headerIn = new ByteArrayInputStream(patch);
         Header header = new Header(headerIn);
@@ -82,10 +81,8 @@ public class Patch {
                     header.getDiffLength());
 
             /* Set up compressed streams */
-            CompressorStreamFactory compressor = new CompressorStreamFactory();
-            controlIn = compressor.createCompressorInputStream(controlIn);
-            dataIn = compressor.createCompressorInputStream(dataIn);
-            extraIn = compressor.createCompressorInputStream(extraIn);
+            dataIn = decompression.apply(dataIn);
+            extraIn = decompression.apply(extraIn);
 
             /* Start patching */
             int newPointer = 0, oldPointer = 0;
@@ -123,8 +120,9 @@ public class Patch {
         }
     }
 
-    public static void patch(File oldFile, File newFile, File patchFile)
-            throws CompressorException, InvalidHeaderException, IOException {
+    public static <X extends Throwable>
+    void patch(File oldFile, File newFile, File patchFile, Decompression<X> decompression)
+            throws X, InvalidHeaderException, IOException {
         /* Read bsdiff header */
         InputStream headerIn = new FileInputStream(patchFile);
         Header header = new Header(headerIn);
@@ -144,10 +142,9 @@ public class Patch {
                     header.getDiffLength());
 
             /* Set up compressed streams */
-            CompressorStreamFactory compressor = new CompressorStreamFactory();
-            controlIn = compressor.createCompressorInputStream(controlIn);
-            dataIn = compressor.createCompressorInputStream(dataIn);
-            extraIn = compressor.createCompressorInputStream(extraIn);
+            controlIn = decompression.apply(controlIn);
+            dataIn = decompression.apply(dataIn);
+            extraIn = decompression.apply(extraIn);
 
             FileInputStream oldStream = new FileInputStream(oldFile);
             byte[] old = new byte[(int) oldFile.length()];

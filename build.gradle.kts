@@ -6,14 +6,6 @@ plugins {
 group = "com.anatawa12.jbsdiff"
 version = property("version").toString()
 
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    implementation("org.apache.commons:commons-compress:1.19")
-}
-
 publishing.publications.create<MavenPublication>("maven") {
     from(components["java"])
     pom {
