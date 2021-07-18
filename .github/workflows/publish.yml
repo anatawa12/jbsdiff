@@ -39,5 +39,5 @@ jobs:
         run: git push && git push --tags
       - uses: anatawa12/something-releaser/create_release@v1
         with:
-          new_version: "${{ steps.verup.outputs.next_version }}"
+          version_name: "${{ steps.verup.outputs.version }}"
           changelog_markdown: "${{ steps.verup.outputs.changelog_markdown }}"
