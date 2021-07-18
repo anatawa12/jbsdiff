@@ -1,0 +1,43 @@
+name: Publisher
+"on":
+  - workflow_dispatch
+jobs:
+  build:
+    environment: deployment
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          token: "${{ secrets.ACTIONS_PAT }}"
+      - uses: anatawa12/something-releaser/set_user@v1
+        with:
+          user: anatawa12-bot
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - uses: anatawa12/something-releaser/verup@v1
+        id: verup
+        with:
+          version_changers: gradle-properties
+      - uses: anatawa12/something-releaser/publish@v1
+        with:
+          publishers: gradle-maven
+          changelog_html: "${{ steps.verup.outputs.changelog_html }}"
+          changelog_markdown: "${{ steps.verup.outputs.changelog_markdown }}"
+          version_name: "${{ steps.verup.outputs.version }}"
+        env:
+          GPG_PRIVATE_KEY: "${{ secrets.GPG_PRIVATE_KEY }}"
+          GPG_PRIVATE_PASS: "${{ secrets.GPG_PRIVATE_PASS }}"
+          GRADLE_MAVEN_AUTH: "${{ secrets.GRADLE_MAVEN_AUTH }}"
+      - uses: anatawa12/something-releaser/verup_next@v1
+        with:
+          new_version: "${{ steps.verup.outputs.next_version }}"
+          version_changers: gradle-properties
+      - name: Push
+        run: git push && git push --tags
+      - uses: anatawa12/something-releaser/create_release@v1
+        with:
+          new_version: "${{ steps.verup.outputs.next_version }}"
+          changelog_markdown: "${{ steps.verup.outputs.changelog_markdown }}"
