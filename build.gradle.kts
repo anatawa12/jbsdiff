@@ -6,6 +6,11 @@ plugins {
 group = "com.anatawa12.jbsdiff"
 version = property("version").toString()
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_6
+    targetCompatibility = JavaVersion.VERSION_1_6
+}
+
 publishing.publications.create<MavenPublication>("maven") {
     from(components["java"])
     pom {
