@@ -9,6 +9,8 @@ version = property("version").toString()
 java {
     sourceCompatibility = JavaVersion.VERSION_1_6
     targetCompatibility = JavaVersion.VERSION_1_6
+    withJavadocJar()
+    withSourcesJar()
 }
 
 publishing.publications.create<MavenPublication>("maven") {
