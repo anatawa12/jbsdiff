@@ -22,13 +22,14 @@ for usage examples.
 
 Compiling
 ---------
-To build a local fat jar, run:
+To build a jar, run:
 ```
-mvn clean package
+./gradlew build
 ```
 
 Dependency Information
 ----------------------
+<!--
 Available on Maven Central:
 ```
 <dependency>
@@ -41,3 +42,4 @@ Available on Maven Central:
 Also available at
 
 [![Clojars Project](http://clojars.org/org.jbsdiff/jbsdiff/latest-version.svg)](http://clojars.org/org.jbsdiff/jbsdiff)
+-->
